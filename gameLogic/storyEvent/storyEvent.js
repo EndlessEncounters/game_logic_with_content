@@ -155,7 +155,7 @@ module.exports = class storyEvent
             }
             else if(this.player.hp > 0)
             {
-                this.displayText += `\n\nThe ${this.entities[0].name} stares at you.`;
+                this.displayText += `\n\n${this.entities[0].name} stares at you.`;
                 if(this.ap <= 0)
                 {
                     this.choices = {'End Turn':abli.endTurn};
