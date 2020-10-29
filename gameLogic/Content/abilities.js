@@ -297,7 +297,7 @@ module.exports={
         StoryEvent.player.hp=0;
         return StoryEvent
     }),
-    fireBall: new ability({name: 'Fire Ball', desc: 'Cast a Fire Ball.'}, (StoryEvent, caster, target) => {
+    fireBall: new ability({name: 'Fire Ball', desc: 'Cast a Fire Ball.', cost: 5}, (StoryEvent, caster, target) => {
         const cost=50;
         const apCost=5;
 
@@ -377,9 +377,11 @@ module.exports={
             console.log('has caster & target', StoryEvent.ap)
             let {str}=caster.stats;
             let {stam, agi}=target.stats;
-            if(StoryEvent.ap>=cost) {
-                console.log('caster.ap>=cost ran')
-                StoryEvent.ap-=cost;
+            if(StoryEvent.ap>=cost||caster.type!=='player') {
+                // console.log('caster.ap>=cost ran')
+                if(caster.type==='player') {
+                    StoryEvent.ap-=cost;
+                }
                 StoryEvent.displayText+=`\n\n${name} attempts to strike ${target.name}!`
                 if(hitRoll===1) {
                     console.log('crit fail ran')
@@ -411,6 +413,9 @@ module.exports={
                     StoryEvent.displayText+=`\n\n${tName} dodges ${pronoun} attack at lightning speed, striking ${name} for ${dmg} damage!`
                     caster.hp-=dmg;
                 }
+            }
+            else {
+                StoryEvent.displayText+='You do not have enough AP for that'
             }
 
         }
@@ -469,6 +474,9 @@ module.exports={
                     caster.hp-=dmg;
                 }
             }
+            else {
+                StoryEvent.displayText+='You do not have enough AP for that'
+            }
 
         }
         else {
@@ -526,6 +534,9 @@ module.exports={
                     caster.hp-=dmg;
                 }
             }
+            else {
+                StoryEvent.displayText+='You do not have enough AP for that'
+            }
 
         }
         else {
@@ -546,7 +557,7 @@ module.exports={
         if(caster&&target) {
             let {str, dex}=caster.stats;
             let {stam, agi}=target.stats;
-            if(StoryEvent.ap>=cost||caster.type=='player') {
+            if(StoryEvent.ap>=cost||caster.type!=='player') {
                 if(caster.type=='player') {
                     StoryEvent.ap-=apCost;
                 }
@@ -577,7 +588,9 @@ module.exports={
                     caster.hp-=dmg;
                 }
             }
-
+            else {
+                StoryEvent.displayText+='You do not have enough AP for that'
+            }
         }
         else {
             StoryEvent.displayText+='But no one is around...'
@@ -586,8 +599,6 @@ module.exports={
     }),
     Whirlwind: new ability({name: 'Whirlwind', desc: 'Spin furiously, attacking multiple times'}, (StoryEvent, caster, target) => {
         const cost=6;
-
-
         const name=caster.name;
         const tName=target.name;
         const pronoun=(StoryEvent.turn=='player')? 'Your':'their';
@@ -605,9 +616,9 @@ module.exports={
                 for(let i=0;i<cost;i++) {
                     let hitRoll=roll(20);
                     if(hitRoll===1) {
-                        const dmg=(str+dex);
+                        const dmg=(str+dex)/6;
                         caster.hp=caster.hp-dmg;
-                        StoryEvent.displayText+=`\n${tName} sprains an ankle, taking ${dmg} damage`;
+                        StoryEvent.displayText+=`\n${name} sprains an ankle, taking ${dmg} damage`;
                         return StoryEvent;
                     }
                     if(hitRoll===20) {
