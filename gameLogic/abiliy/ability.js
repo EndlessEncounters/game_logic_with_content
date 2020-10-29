@@ -1,35 +1,53 @@
 module.exports=class ability {
     constructor(data={}, logic=(StoryEvent, caster=null, target=null) => {return StoryEvent}) {
         if(data) {
-            var {name, desc}=data;
+            var {name, desc, cost, type}=data;
         }
-        this.name=data.name||"";
-        this.desc=data.desc||"";
-        this.cost=data.cost||0;
+        this.name=name||"";
+        this.desc=desc||"";
+        this.cost=cost||0;
+        this.type=type;
         this.logic=logic;
 
     }
     do(event=this.StoryEvent, caster=(event.turn=='player')? event.player:event.entities[0], target=(event.turn=='enemy')? event.player:event.entities[0], data=this) {
         if(event) {
-            if(this.cost<=event.ap||!caster.type=='player') {
-                if(caster.type=='player') {
+           
+            if(this.type == 'offense')
+            {
+                
+                if(!target)
+                {
+                    event.displayText = '\n\nYou can\'t...\n';
+                    return event;
+                }
+                event.combat = true;
+            }
+            if(caster.type=='player') {
+                if(this.cost <= event.ap)
+                {
                     event.ap-=this.cost;
                 }
-
-                const result=this.logic(event, caster, target, data);
-                if(result.dataType==='StoryEvent') {
-                    return result;
-                }
                 else {
-                    throw new Error('Ability must return storyevent')
+                    event.displayText=`\n\n${caster.name} Not enough ap!\n`;
+                    //event.turn='enemy';
+                    return event;
+    
                 }
+                
+            }
+            
+            
+            const result=this.logic(event, caster, target, data);
+            if(result.dataType==='StoryEvent') {
+                
+                return result;
             }
             else {
-                event.displayText='\n\nNot enough ap!\n';
-                event.turn='enemy';
-                return event;
-
+                throw new Error('Ability must return storyevent')
             }
+            
+            
 
         }
         else {

@@ -10,6 +10,19 @@ const roll=function (max) {
     max=Math.floor(max);
     return Math.floor(Math.random()*(max-min)+min); //The maximum is exclusive and the minimum is inclusive
 }
+const verbs=(caster)=>
+{
+    const you =    {dodge:'dodge',attack:'attack',strike:'strike',prepare:'prepare',ready:'ready',their:'their', have:'have',them:'them',miss:'miss',hit:'hit',channel:'channel', hurl:'hurl'}
+    const enemy =  {dodge:'dodges',attack:'attacks',strike:'strikes',prepare:'prepares',ready:'readys',their:'your', have:'has',them:'you',miss:'misses',hit:'hits',channel:'channel', hurl:'hurls'}
+    if(caster.type == 'player')
+    {
+        return you;
+    }
+    else
+    {
+        return enemy;
+    }
+}
 /*
 str = stats.str || str;
 dex = stats.dex || dex;
@@ -297,35 +310,33 @@ module.exports={
         StoryEvent.player.hp=0;
         return StoryEvent
     }),
-    fireBall: new ability({name: 'Fire Ball', desc: 'Cast a Fire Ball.', cost: 5}, (StoryEvent, caster, target) => {
+    fireBall: new ability({name: 'Fire Ball', desc: 'Cast a Fire Ball.', cost: 5 ,type:'offense'}, (StoryEvent, caster, target) => {
         const cost=50;
-        const apCost=5;
+        
 
-        if(caster.type=='player') {
-            StoryEvent.ap-=apCost;
-        }
         StoryEvent.combat=true;
+        let {channel, hurl, have, dodge} = verbs(caster);
         let name=(StoryEvent.turn=='player')? 'You':caster.name;
         let tName=(StoryEvent.turn=='enemy')? 'You':target.name;
         let pronoun=(StoryEvent.turn=='player')? 'Your':'their';
-        StoryEvent.displayText=`\n\n${name} channels ${pronoun} energy into to form a massive fire ball.`
+        StoryEvent.displayText=`\n\n${name} ${channel} ${pronoun} energy to form a massive fire ball.`
         if(caster&&target) {
             let {int, will}=caster.stats;
             let {agi}=target.stats;
             if(caster.mp>=cost) {
                 caster.mp-=cost;
-                StoryEvent.displayText+=`\n\n${name} hurls the fire ball at ${target.name}!`
+                StoryEvent.displayText+=`\n\n${name} ${hurl} the fire ball at ${target.name}!`
                 if(roll(20)+int+will>=roll(20)+agi) {
                     const dmg=(int+will+roll(20));
                     StoryEvent.displayText+=`\n\n${pronoun} fire ball hits ${tName} for ${dmg} damage!`;
                     target.hp-=dmg;
                     if(target.hp<=0) {
-                        StoryEvent.displayText+=`\n\n${tName} has been reduced to ash...`;
+                        StoryEvent.displayText+=`\n\n${tName} ${have} been reduced to ash...`;
                     }
                 }
                 else {
                     const dmg=(target.stats.str/2);
-                    StoryEvent.displayText+=`\n\n${tName} dodge the fire ball with lightning speed, striking the ${name} for ${dmg} damage!`
+                    StoryEvent.displayText+=`\n\n${tName} ${dodge} the fire ball with lightning speed, striking the ${name} for ${dmg} damage!`
                     caster.hp-=dmg;
                 }
             }
@@ -361,17 +372,18 @@ module.exports={
         }
         return StoryEvent;
     }),
-    Attack: new ability({name: "Attack", desc: "A basic attack."}, (StoryEvent, caster, target) => {
+    Attack: new ability({name: "Attack", desc: "A basic attack.", type:'offense'}, (StoryEvent, caster, target) => {
         const cost=5;
         const apCost=5;
         // if(caster.type=='player') {
         //     StoryEvent.ap-=apCost;
         // }
         StoryEvent.combat=true;
-        let name=caster.name;
+        let name=(caster.type == 'player')? 'You':caster.name;
+        let {prepare, attempt, hit, miss} = verbs(caster)
         let tName=target.name;
         let pronoun=(StoryEvent.turn=='player')? 'Your':'their';
-        StoryEvent.displayText=`\n\n${name} prepare to attack.`
+        StoryEvent.displayText=`\n\n${name} ${prepare} to attack.`
         const hitRoll=roll(20);
         if(caster&&target) {
             console.log('has caster & target', StoryEvent.ap)
@@ -382,12 +394,12 @@ module.exports={
                 if(caster.type==='player') {
                     StoryEvent.ap-=cost;
                 }
-                StoryEvent.displayText+=`\n\n${name} attempts to strike ${target.name}!`
+                StoryEvent.displayText+=`\n\n${name} ${attempt} to strike ${target.name}!`
                 if(hitRoll===1) {
                     console.log('crit fail ran')
                     const dmg=(str/2)
                     caster.hp=(caster.hp-dmg);
-                    StoryEvent.displayText+=`${name} misses spectacularly, injuring themselves for ${dmg} damage..\n`
+                    StoryEvent.displayText+=`${name} ${miss} spectacularly, injuring themselves for ${dmg} damage..\n`
                     return StoryEvent
                 }
                 if(hitRoll===20) {
@@ -400,10 +412,10 @@ module.exports={
                 if(hitRoll+str>=(stam+((agi+2)/2))) {
                     console.log('successful hit ran')
                     const dmg=(str+roll(4));
-                    StoryEvent.displayText+=`\n\n${name} hits ${tName} for ${dmg} damage!`;
+                    StoryEvent.displayText+=`\n\n${name} ${hit} ${tName} for ${dmg} damage!`;
                     target.hp-=dmg;
                     if(target.hp<=0) {
-                        console.log('killed it ran')
+                        //console.log('killed it ran')
                         StoryEvent.displayText+=`\n\n${tName} has fallen, lifeless to the ground...`;
                     }
                 }
